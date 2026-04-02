@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 // MongoDB Connection
 console.log("ENV VALUE:",
     process.env.MONGO_URL);
-mongoose.connect("mongodb://swetha:swetha333@ac-x9hoixs-shard-00-00.hwr1isp.mongodb.net:27017,ac-x9hoixs-shard-00-01.hwr1isp.mongodb.net:27017,ac-x9hoixs-shard-00-02.hwr1isp.mongodb.net:27017/?ssl=true&replicaSet=atlas-41cekg-shard-0&authSource=admin&appName=Cluster")
+mongoose.connect(process.env.MONGO_URL)
   .then(() => {
     console.log("MongoDB Connected ✅");
   })
@@ -33,6 +33,23 @@ app.get("/", (req, res) => {
 });
 
 // Contact API
+const contactSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  message: String,
+  date: { type: Date, default: Date.now }
+});
+const Contact = mongoose.model("Contact", contactSchema);
+app.post("/contact", async (req, res) => {
+  const { name, email, message } = req.body;
+  try {
+    const newContact = new Contact({ name, email, message });
+    await newContact.save();
+    res.send("Message saved!");
+  } catch (err) {
+    res.status(500).send("Error saving message");
+  }
+});
 app.post("/contact", (req, res) => {
   const { name, email, message } = req.body;
 
