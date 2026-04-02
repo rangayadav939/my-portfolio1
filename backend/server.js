@@ -14,8 +14,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // MongoDB Connection
-console.log("ENV VALUE:",
-    process.env.MONGO_URL);
 mongoose.connect(process.env.MONGO_URL)
   .then(() => {
     console.log("MongoDB Connected ✅");
@@ -31,8 +29,6 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
-
-// Contact API
 const contactSchema = new mongoose.Schema({
   name: String,
   email: String,
@@ -50,6 +46,7 @@ app.post("/contact", async (req, res) => {
     res.status(500).send("Error saving message");
   }
 });
+// Contact API
 app.post("/contact", (req, res) => {
   const { name, email, message } = req.body;
 
