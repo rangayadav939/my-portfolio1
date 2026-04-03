@@ -1,56 +1,49 @@
-require("dotenv").config();
+name: Node.js CI/CD Pipeline
 
-const express = require("express");
-const path = require("path");
-const cors = require("cors");
-const mongoose = require("mongoose");
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
-const app = express();
-const PORT = process.env.PORT || 5000;
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URL)
-  .then(() => console.log("MongoDB Connected ✅"))
-  .catch((err) => console.log("MongoDB Error:", err));
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-// Serve frontend files
-app.use(express.static(path.join(__dirname, "../frontend")));
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm install
 
-// Homepage route
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/index.html"));
-});
+      - name: Check server.js syntax
+        run: node --check backend/server.js
 
-// Schema
-const contactSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  message: String,
-  date: { type: Date, default: Date.now }
-});
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
 
-const Contact = mongoose.model("Contact", contactSchema);
+    permissions:
+      contents: write
 
-// Contact API (ONLY ONE)
-app.post("/contact", async (req, res) => {
-  const { name, email, message } = req.body;
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  try {
-    const newContact = new Contact({ name, email, message });
-    await newContact.save();
-    res.send("Message saved!");
-  } catch (err) {
-    console.log(err);
-    res.status(500).send("Error saving message");
-  }
-});
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+      - name: Deploy frontend to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./frontend
