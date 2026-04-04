@@ -229,13 +229,30 @@
     <h2>💬 Feedback</h2>
 
     <form id="feedbackForm">
-      <input type="text" id="name" placeholder="Name" required>
-      <input type="email" id="email" placeholder="Email" required>
-      <textarea id="message" placeholder="Message" required></textarea>
-      <button type="submit">Submit</button>
-    </form>
-  </div>
-</div>
+      document.getElementById("feedbackForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const message = document.getElementById("message").value;
+
+  try {
+    const response = await fetch("https://portfolio-backend-vbo4.onrender.com/contact", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ name, email, message })
+    });
+
+    if (response.ok) {
+      alert("Feedback sent successfully! ✅");
+      document.getElementById("feedbackForm").reset();
+    } else {
+      alert("Error sending feedback!");
+    }
+  } catch {
+    alert("Error connecting to server");
+  }
+});
 
 <!-- MODAL -->
 <div id="modal" class="modal">
